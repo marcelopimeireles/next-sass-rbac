@@ -6,6 +6,9 @@ import {
   MongoAbility,
 } from '@casl/ability'
 
+import { User } from './models/User'
+import { permissions } from './permissions'
+
 export const actions = ['manage', 'invite', 'delete'] as const
 export const subjects = ['User', 'all'] as const
 
@@ -19,9 +22,16 @@ export type Abilities = [
 export type AppAbility = MongoAbility<Abilities>
 export const createAbility = createMongoAbility as CreateAbility<AppAbility>
 
-const { build, can, cannot } = new AbilityBuilder(createAbility)
+export function defineAbilityFor(user: User) {
+  const builder = new AbilityBuilder(createAbility)
 
-can('invite', 'User')
-cannot('delete', 'User')
+  if (typeof permissions[user.role] !== 'function') {
+    throw new Error(`Permissions for role ${user.role} not found.`)
+  }
 
-export const ability = build()
+  permissions[user.role](user, builder)
+
+  const ability = builder.build()
+
+  return ability
+}
