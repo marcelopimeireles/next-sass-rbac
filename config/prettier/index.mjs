@@ -14,7 +14,7 @@ const config = {
     bracketSpacing: true,
     arrowParens: 'always',
     endOfLine: 'auto',
-    bracketSameLine: false,
-}
-
-export default config
+    bracketSameLine: false
+  }
+  
+  export default config
