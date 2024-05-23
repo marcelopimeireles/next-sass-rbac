@@ -1,22 +1,25 @@
-import { FastifyInstance } from 'fastify'
-import { ZodTypeProvider } from 'fastify-type-provider-zod'
-import z from 'zod'
+import type { FastifyInstance } from 'fastify'
+import type { ZodTypeProvider } from 'fastify-type-provider-zod'
+import { z } from 'zod'
 
+import { BadRequestError } from '@/http/routes/_errors/bad-request-error'
 import { prisma } from '@/lib/prisma'
 
-export async function authenticateWithPassword(app: FastifyInstance) {
+export async function getProfile(app: FastifyInstance) {
   app.withTypeProvider<ZodTypeProvider>().get(
     '/profile',
     {
       schema: {
-        tags: ['auth'],
+        tags: ['Auth'],
         summary: 'Get authenticated user profile',
         response: {
           200: z.object({
-            id: z.string().uuid(),
-            name: z.string(),
-            email: z.string().email(),
-            avatarUrl: z.string().url(),
+            user: z.object({
+              id: z.string().uuid(),
+              name: z.string().nullable(),
+              email: z.string().email(),
+              avatarUrl: z.string().url().nullable(),
+            }),
           }),
         },
       },
@@ -35,6 +38,11 @@ export async function authenticateWithPassword(app: FastifyInstance) {
           id: sub,
         },
       })
+
+      if (!user) {
+        throw new BadRequestError('User not found.')
+      }
+
       return reply.send({ user })
     },
   )
